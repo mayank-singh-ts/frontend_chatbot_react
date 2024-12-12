@@ -21,7 +21,7 @@ function App() {
 
     try {
       // Send user input to backend (Flask API)
-      const response = await axios.post('http://127.0.0.1:5001/query', {
+      const response = await axios.post('http://13.48.25.214:5001/query', {
         message: userInput,
         user_id: 'user1', // Use a fixed user ID for simplicity
       });
