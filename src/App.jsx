@@ -6,13 +6,20 @@ function App() {
   const [messages, setMessages] = useState([]); // Store messages
   const [userInput, setUserInput] = useState(''); // User input state
   const [loading, setLoading] = useState(false); // Loading state
+  const [userId, setUserId] = useState(''); // Persistent user ID
   const chatContainerRef = useRef(null); // Reference for auto-scrolling
+
+  // Generate a new user ID each time the page refreshes
+  useEffect(() => {
+    const newUserId = String(Math.floor(1000 + Math.random() * 9000)); // Generate a random 4-digit user ID
+    setUserId(newUserId); // Update state with the new user ID
+  }, []);
 
   // Function to handle user input
   const handleUserInput = async () => {
     if (userInput.trim() === '') return; // Prevent empty messages
 
-    // Add user message
+    // Add user message to chat
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: 'user', text: userInput },
@@ -23,27 +30,53 @@ function App() {
     try {
       const response = await axios.post('http://13.49.68.219:5001/query', {
         message: userInput,
-        user_id: '123',
+        user_id: userId, // Use the current user ID
       });
-      console.log('API Response:', response.data);
 
-      // Handle response format for multiple questions
+      console.log('API Response:', response.data);
       const botResponse = response.data.response || response.data;
+
+      // Create bot message
       let botMessage;
 
+      // Function to detect and highlight URLs
+      const highlightLinks = (text) => {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.split(urlRegex).map((part, index) => {
+          if (index % 2 === 1) {
+            // It's a URL, make it clickable
+            return (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                {part}
+              </a>
+            );
+          }
+          return part; // Return non-URL text as is
+        });
+      };
+
       if (Array.isArray(botResponse)) {
-        // If the response is an array of questions
         botMessage = {
           sender: 'bot',
           text: 'Here are some related questions you might find helpful:',
           options: botResponse,
-        };
+        }; 
       } else {
-        // If the response is a plain string
-        botMessage = { sender: 'bot', text: botResponse };
+        botMessage = {
+          sender: 'bot',
+          text: highlightLinks(botResponse), // Highlight links in the response
+        };
       }
 
+      // Append bot message
       setMessages((prevMessages) => [...prevMessages, botMessage]);
+
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages((prevMessages) => [
@@ -80,26 +113,22 @@ function App() {
             <motion.div
               key={index}
               className={`p-3 rounded-lg ${
-                message.sender === 'user'
-                  ? 'bg-blue-100 self-end'
-                  : 'bg-gray-100'
+                message.sender === 'user' ? 'bg-blue-100 self-end' : 'bg-gray-100'
               }`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <div className="text-sm text-gray-700">
-                {message.text}
-                {message.options && (
-                  <ul className="mt-2 space-y-2">
-                    {message.options.map((option, idx) => (
-                      <li key={idx} className="text-blue-500 underline cursor-pointer">
-                        {option}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <div className="text-sm text-gray-700">{message.text}</div>
+              {message.options && (
+                <ul className="mt-2 space-y-2">
+                  {message.options.map((option, idx) => (
+                    <li key={idx} className="text-blue-500 underline cursor-pointer">
+                      {option}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </motion.div>
           ))}
         </div>
@@ -125,9 +154,7 @@ function App() {
           />
           <motion.button
             onClick={handleUserInput}
-            className={`p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${
-              loading ? 'cursor-not-allowed opacity-50' : ''
-            }`}
+            className={`p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
             disabled={loading}
           >
             {loading ? 'Sending...' : 'Send'}
