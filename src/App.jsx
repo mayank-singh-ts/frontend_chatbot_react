@@ -48,7 +48,7 @@ function App() {
   const handleUserInput = async () => {
     if (userInput.trim() === '') return; // Prevent empty messages
 
-    // Add user message to chat
+    // Add user message to chat ok
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: 'user', text: userInput },
