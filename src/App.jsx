@@ -19,7 +19,7 @@ function App() {
   const highlightLinks = (text) => {
     const lines = text.split('\n'); // Split the response into lines
     return lines.map((line, idx) => {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const urlRegex = /(https?:\/\/(?:www\.)?[\w-]+\.[a-z]{2,6}(?:\/[^\s]*)?|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|\b\d{3}-\d{8}\b|\b\d{4}-\d{4}\b|\b\d+\b)/g;
       const parts = line.split(urlRegex);
 
       return (
@@ -48,7 +48,7 @@ function App() {
   const handleUserInput = async () => {
     if (userInput.trim() === '') return; // Prevent empty messages
 
-    // Add user message to chat ok
+    // Add user message to chat
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: 'user', text: userInput },
