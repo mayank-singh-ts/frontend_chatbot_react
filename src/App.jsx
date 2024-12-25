@@ -15,6 +15,35 @@ function App() {
     setUserId(newUserId); // Update state with the new user ID
   }, []);
 
+  // Function to detect and highlight URLs and format response
+  const highlightLinks = (text) => {
+    const lines = text.split('\n'); // Split the response into lines
+    return lines.map((line, idx) => {
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const parts = line.split(urlRegex);
+
+      return (
+        <div key={idx} className="mb-2">
+          {parts.map((part, index) =>
+            urlRegex.test(part) ? (
+              <a
+                key={index}
+                href={part}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                {part}
+              </a>
+            ) : (
+              part
+            )
+          )}
+        </div>
+      );
+    });
+  };
+
   // Function to handle user input
   const handleUserInput = async () => {
     if (userInput.trim() === '') return; // Prevent empty messages
@@ -36,47 +65,13 @@ function App() {
       console.log('API Response:', response.data);
       const botResponse = response.data.response || response.data;
 
-      // Create bot message
-      let botMessage;
-
-      // Function to detect and highlight URLs
-      const highlightLinks = (text) => {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.split(urlRegex).map((part, index) => {
-          if (index % 2 === 1) {
-            // It's a URL, make it clickable
-            return (
-              <a
-                key={index}
-                href={part}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline"
-              >
-                {part}
-              </a>
-            );
-          }
-          return part; // Return non-URL text as is
-        });
+      const botMessage = {
+        sender: 'bot',
+        text: highlightLinks(botResponse), // Format the response
       };
-
-      if (Array.isArray(botResponse)) {
-        botMessage = {
-          sender: 'bot',
-          text: 'Here are some related questions you might find helpful:',
-          options: botResponse,
-        }; 
-      } else {
-        botMessage = {
-          sender: 'bot',
-          text: highlightLinks(botResponse), // Highlight links in the response
-        };
-      }
 
       // Append bot message
       setMessages((prevMessages) => [...prevMessages, botMessage]);
-
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages((prevMessages) => [
@@ -119,15 +114,10 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <div className="text-sm text-gray-700">{message.text}</div>
-              {message.options && (
-                <ul className="mt-2 space-y-2">
-                  {message.options.map((option, idx) => (
-                    <li key={idx} className="text-blue-500 underline cursor-pointer">
-                      {option}
-                    </li>
-                  ))}
-                </ul>
+              {Array.isArray(message.text) ? (
+                <div>{message.text}</div>
+              ) : (
+                <div className="text-sm text-gray-700">{message.text}</div>
               )}
             </motion.div>
           ))}
@@ -154,7 +144,9 @@ function App() {
           />
           <motion.button
             onClick={handleUserInput}
-            className={`p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${loading ? 'cursor-not-allowed opacity-50' : ''}`}
+            className={`p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${
+              loading ? 'cursor-not-allowed opacity-50' : ''
+            }`}
             disabled={loading}
           >
             {loading ? 'Sending...' : 'Send'}
