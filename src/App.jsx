@@ -115,7 +115,7 @@ function App() {
       />
 
       {/* Chat container */}
-      <div className="w-full h-[630px] max-w-md bg-white rounded-xl shadow-lg flex flex-col">
+      <div className="w-full h-[500px] max-w-md bg-white rounded-xl shadow-lg flex flex-col">
         <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto space-y-4">
           {messages.map((message, index) => (
             <motion.div
