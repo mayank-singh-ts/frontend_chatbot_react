@@ -8,6 +8,7 @@ function App() {
   const [loading, setLoading] = useState(false); // Loading state
   const [userId, setUserId] = useState(''); // Persistent user ID
   const chatContainerRef = useRef(null); // Reference for auto-scrolling
+  const inputRef = useRef(null); // Reference for input field to focus
 
   // Generate a new user ID each time the page refreshes
   useEffect(() => {
@@ -62,7 +63,7 @@ function App() {
         user_id: userId, // Use the current user ID
       });
 
-      console.log('API Response:', response.data);
+      // console.log('API Response:', response.data); show the data in consol.log
       const botResponse = response.data.response || response.data;
 
       const botMessage = {
@@ -81,7 +82,12 @@ function App() {
     }
 
     setLoading(false);
-    setUserInput('');
+    setUserInput(''); // Clear the input field after sending
+
+    // Focus the input field again after sending the message
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
   };
 
   // Auto-scroll to the bottom of the chat
@@ -90,6 +96,13 @@ function App() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Focus the input field after clearing it
+  useEffect(() => {
+    if (userInput === '') {
+      inputRef.current?.focus();
+    }
+  }, [userInput]);
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-500 flex flex-col items-center p-4">
@@ -102,7 +115,7 @@ function App() {
       />
 
       {/* Chat container */}
-      <div className="w-full h-[400px] max-w-md bg-white rounded-xl shadow-lg flex flex-col">
+      <div className="w-full h-[630px] max-w-md bg-white rounded-xl shadow-lg flex flex-col">
         <div ref={chatContainerRef} className="flex-grow p-4 overflow-y-auto space-y-4">
           {messages.map((message, index) => (
             <motion.div
@@ -130,6 +143,7 @@ function App() {
         {/* Input section */}
         <div className="flex p-3 border-t border-gray-200">
           <motion.input
+            ref={inputRef} // Reference the input field
             type="text"
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
@@ -144,7 +158,7 @@ function App() {
           />
           <motion.button
             onClick={handleUserInput}
-            className={`p-2 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${
+            className={`p-3 w-[80px] h-[50px] ml-1 bg-blue-500 text-white rounded-r-lg hover:bg-blue-600 ${
               loading ? 'cursor-not-allowed opacity-50' : ''
             }`}
             disabled={loading}
